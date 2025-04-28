@@ -1,23 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  validarCPF,
-  validarEmail,
-  validarNumeroCelular,
-  validarRG,
-} from "../models/validacao";
-import { formatarCPF, formatarTelefone, limparTexto } from "../utils/formatar";
-import {
-  Alert,
-  Button,
-  Col,
-  Container,
-  Form,
-  Row,
-  Spinner,
-} from "react-bootstrap";
+import { validarCPF, validarEmail, validarNumeroCelular, validarRG, } from "../models/validacao";
+import { formatarCEP, formatarCPF, FormataRG, formatarTelefone, limparTexto, } from "../utils/formatar";
+import { Alert, Button, Col, Container, Form, Row, Spinner, } from "react-bootstrap";
 import { FaAddressCard } from "react-icons/fa";
 import { AiFillInfoCircle } from "react-icons/ai";
+import { BuscaApiCep } from "../utils/cep";
 
 export default function Editar() {
   const [searchParams] = useSearchParams();
@@ -113,23 +101,24 @@ export default function Editar() {
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
-            nome,
-            novoCpf: cpf,
-            email,
-            telefone,
-            rg,
-            dataNascimento,
-            genero,
-            identidadeGenero,
-            identidadeRacial,
-            cep: endereco.cep,
-            logradouro: endereco.logradouro,
+            nome: limparTexto(nome),
+            novoCpf: limparTexto(cpf),
+            email: limparTexto(email),
+            telefone: limparTexto(telefone),
+            rg: limparTexto(rg),
+            dataNascimento: limparTexto(dataNascimento),
+            genero: limparTexto(genero),
+            identidadeGenero: limparTexto(identidadeGenero),
+            identidadeRacial: limparTexto(identidadeRacial),
+            cep: limparTexto(endereco.cep),
+            logradouro: limparTexto(endereco.logradouro),
             numero: endereco.numero,
-            complemento: endereco.complemento,
-            bairro: endereco.bairro,
-            cidade: endereco.cidade,
-            estado: endereco.estado,
+            complemento: limparTexto(endereco.complemento),
+            bairro: limparTexto(endereco.bairro),
+            cidade: limparTexto(endereco.cidade),
+            estado: limparTexto(endereco.estado),
           }),
         }
       );
@@ -142,6 +131,22 @@ export default function Editar() {
     } catch (error) {
       setMensagem("Falha ao editar.");
       setIsError(true);
+    }
+  };
+
+  const buscarCep = async () => {
+    try {
+      const dados = await BuscaApiCep(endereco.cep);
+      setEndereco((Antigo) => ({
+        ...Antigo,
+        logradouro: dados.logradouro || Antigo.logradouro,
+        bairro: dados.bairro || Antigo.bairro,
+        cidade: dados.cidade || Antigo.cidade,
+        estado: dados.estado || Antigo.estado,
+        complemento: dados.complemento || Antigo.complemento,
+      }));
+    } catch (error) {
+      console.error(error.message);
     }
   };
 
@@ -180,7 +185,7 @@ export default function Editar() {
               </Form.Group>
             </Col>
           </Row>
-          {/*cpf e RG*/}
+
           <Row className="mb-3">
             <Col md={6}>
               <Form.Group controlId="cpf">
@@ -204,12 +209,12 @@ export default function Editar() {
                 type="text"
                 placeholder="RG"
                 value={rg}
-                onChange={(e) => setRg(e.target.value)}
+                onChange={(e) => setRg(FormataRG(e.target.value))}
                 required
               />
             </Col>
           </Row>
-          {/*//Telefone e E-mail*/}
+
           <Row>
             <Col md={"6"}>
               <Form.Group controlId="telefone">
@@ -255,7 +260,7 @@ export default function Editar() {
               </Form.Group>
             </Col>
           </Row>
-          {/*//Sexo, IdentGenero, IdentRacial*/}
+
           <Row>
             <Col id={"genero-row"}>
               <Form.Group
@@ -323,7 +328,7 @@ export default function Editar() {
             </Col>
           </Row>
           <h5 style={{ marginTop: 30 }}>Endereço</h5>
-          {/*//Cep e logradouro*/}
+
           <Row>
             <Col md={4}>
               <Form.Group
@@ -334,11 +339,15 @@ export default function Editar() {
                 <Form.Label>CEP</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="CEP"
+                  placeholder="74000-000"
                   value={endereco.cep}
                   onChange={(e) =>
-                    setEndereco({ ...endereco, cep: e.target.value })
+                    setEndereco({
+                      ...endereco,
+                      cep: formatarCEP(e.target.value),
+                    })
                   }
+                  onBlur={buscarCep}
                   required
                 />
               </Form.Group>
@@ -362,7 +371,7 @@ export default function Editar() {
               </Form.Group>
             </Col>
           </Row>
-          {/*//Numero e Complemento*/}
+
           <Row>
             <Col md={4}>
               <Form.Group
@@ -400,7 +409,7 @@ export default function Editar() {
               </Form.Group>
             </Col>
           </Row>
-          {/*//Bairro, Estado e Cidade*/}
+
           <Row>
             <Col md={4}>
               <Form.Group
@@ -486,4 +495,3 @@ export default function Editar() {
     </Container>
   );
 }
-

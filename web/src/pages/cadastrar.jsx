@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import {
+  validarCep,
   validarCPF,
   validarData,
   validarEmail,
   validarNumeroCelular,
   validarRG,
 } from "../models/validacao";
-import { formatarCPF, formatarTelefone } from "../utils/formatar";
+import {formatarCEP, formatarCPF, FormataRG, formatarTelefone, limparTexto} from "../utils/formatar";
 import { Alert, Button, Col, Container, Form, Row } from "react-bootstrap";
 import { FaAddressCard } from "react-icons/fa";
 import { AiFillInfoCircle } from "react-icons/ai";
+import {BuscaApiCep} from "../utils/cep";
 
 export default function Cadastrar() {
   const [nome, setNome] = useState("");
@@ -43,6 +45,7 @@ export default function Cadastrar() {
     if (!validarNumeroCelular(telefone)) erros.push("Telefone inválido");
     if (!validarRG(rg)) erros.push("Tamanho do RG inválido");
     if (!validarData(dataNascimento)) erros.push("Data de nascimento inválida");
+    if (!validarCep(endereco.cep)) erros.push("cep incompleto");
     if (erros.length > 0) {
       setMensagem(erros.join(" · "));
       setIsError(true);
@@ -54,22 +57,22 @@ export default function Cadastrar() {
     }
 
     const assistido = {
-      nome,
-      cpf,
-      email,
-      telefone,
-      rg,
-      dataNascimento,
-      genero,
-      identidadeGenero,
-      identidadeRacial,
-      cep: endereco.cep,
-      logradouro: endereco.logradouro,
-      numero: endereco.numero,
-      complemento: endereco.complemento,
-      bairro: endereco.bairro,
-      cidade: endereco.cidade,
-      estado: endereco.estado,
+      nome: limparTexto(nome),
+      cpf: limparTexto(cpf),
+      email: limparTexto(email),
+      telefone: limparTexto(telefone),
+      rg: limparTexto(rg),
+      dataNascimento: limparTexto(dataNascimento),
+      genero: limparTexto(genero),
+      identidadeGenero: limparTexto(identidadeGenero),
+      identidadeRacial: limparTexto(identidadeRacial),
+      cep: limparTexto(endereco.cep),
+      logradouro: limparTexto(endereco.logradouro),
+      numero : endereco.numero,
+      complemento: limparTexto(endereco.complemento),
+      bairro: limparTexto(endereco.bairro),
+      cidade: limparTexto(endereco.cidade),
+      estado: limparTexto(endereco.estado),
     };
 
     try {
@@ -121,6 +124,22 @@ export default function Cadastrar() {
     }
   };
 
+  const buscarCep = async () => {
+    try {
+      const data = await BuscaApiCep(endereco.cep);
+      setEndereco(Antigo => ({
+        ...Antigo,
+        logradouro: data.logradouro || Antigo.logradouro,
+        bairro: data.bairro || Antigo.bairro,
+        cidade: data.cidade || Antigo.cidade,
+        estado: data.estado || Antigo.estado,
+        complemento: data.complemento || Antigo.complemento,
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   return (
     <Container style={{ marginTop: 40 }}>
       <h2>Incluir Assistido</h2>
@@ -142,7 +161,7 @@ export default function Cadastrar() {
             </Form.Group>
           </Col>
         </Row>
-        {/*cpf e RG*/}
+
         <Row className="mb-3">
           <Col md={6}>
             <Form.Group controlId="cpf">
@@ -166,12 +185,12 @@ export default function Cadastrar() {
               type="text"
               placeholder="RG"
               value={rg}
-              onChange={(e) => setRg(e.target.value)}
+              onChange={(e) => setRg(FormataRG(e.target.value))}
               required
             />
           </Col>
         </Row>
-        {/*//Telefone e E-mail*/}
+
         <Row>
           <Col md={"6"}>
             <Form.Group controlId="telefone">
@@ -215,7 +234,7 @@ export default function Cadastrar() {
             </Form.Group>
           </Col>
         </Row>
-        {/*//Sexo, IdentGenero, IdentRacial*/}
+
         <Row>
           <Col id={"genero-row"}>
             <Form.Group
@@ -283,7 +302,7 @@ export default function Cadastrar() {
           </Col>
         </Row>
         <h5 style={{ marginTop: 30 }}>Endereço</h5>
-        {/*//Cep e logradouro*/}
+
         <Row>
           <Col md={4}>
             <Form.Group
@@ -294,11 +313,12 @@ export default function Cadastrar() {
               <Form.Label>CEP</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="CEP"
+                placeholder="74000-000"
                 value={endereco.cep}
                 onChange={(e) =>
-                  setEndereco({ ...endereco, cep: e.target.value })
+                    setEndereco({ ...endereco, cep: formatarCEP(e.target.value) })
                 }
+                onBlur={buscarCep}
                 required
               />
             </Form.Group>
@@ -322,7 +342,7 @@ export default function Cadastrar() {
             </Form.Group>
           </Col>
         </Row>
-        {/*//Numero e Complemento*/}
+
         <Row>
           <Col md={4}>
             <Form.Group
@@ -360,7 +380,7 @@ export default function Cadastrar() {
             </Form.Group>
           </Col>
         </Row>
-        {/*//Bairro, Estado e Cidade*/}
+
         <Row>
           <Col md={4}>
             <Form.Group

@@ -77,35 +77,32 @@ router.patch("/:id", upload.single("imagem"), async (req, res) => {
   }
 });
 
-function deleteFile(file) {
-  const caminho = path.join(__dirname, "..", "uploads", file);
-  fs.unlink(caminho, (err) => {
-    if (err) {
-      console.error("Erro ao deletar a Imagem", err);
-    } else {
-      console.log("Imagem deletada com sucesso");
-    }
-  });
-}
-
-router.delete("/:id", async (req, res) => {
+router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query(
-      "SELECT FROM comunicados WHERE id = $1 RETURNING *;",
-      [id]
-    );
+    const result = await pool.query('SELECT imagem FROM comunicados WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).send("Nenhuma imagem encontrada para excluir");
     }
 
     const imagem = result.rows[0].imagem;
-    await pool.query("DELETE FROM comunicados WHERE id = $1", [id]);
-    deleteFile(imagem);
-    res.status(200).send("Exclusão realizada com sucesso");
+    await pool.query('DELETE FROM comunicados WHERE id = $1', [id]);
+
+    if (imagem) {
+      const caminhoImagem = path.join('uploads', imagem);
+      fs.unlink(caminhoImagem, (err) => {
+        if (err) {
+          console.error('Erro ao deletar imagem:', err);
+        } else {
+          console.log('Imagem deletada com sucesso.');
+        }
+      });
+    }
+
+    res.status(204).send("Exclusão realizada com sucesso");
   } catch (error) {
     console.error(error);
-    res.status(500).send("Erro ao excluir imagem");
+    res.status(500).send('Erro ao excluir imagem');
   }
 });
 

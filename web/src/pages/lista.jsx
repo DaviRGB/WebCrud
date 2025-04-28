@@ -97,25 +97,6 @@ export default function Listar() {
     }
   };
 
-  // const handleExcluir = async (cpf) => {
-  //     const confirmado = window.confirm(
-  //         "Tem certeza que deseja excluir este assistido?"
-  //     );
-  //     if (confirmado) {
-  //         try {
-  //             await fetch(`http://localhost:8080/assistidos/${cpf}`, {
-  //                 method: "DELETE",
-  //             });
-  //             const novaLista = dp.filter((a) => a.cpf !== cpf);
-  //             setdp(novaLista);
-  //             setLista(novaLista);
-  //         } catch (error) {
-  //             console.error("Erro ao excluir assistido", error);
-  //         }
-  //
-  //     }
-  // };
-
   return (
     <Container style={{ marginTop: 40 }}>
       <h2>Lista de Assistidos</h2>

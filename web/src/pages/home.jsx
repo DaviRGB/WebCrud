@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Container, Form, Button, Row, Col, Alert } from "react-bootstrap";
+import { FaUserCircle } from "react-icons/fa";
 
 export default function Home() {
   const [comunicados, setComunicados] = useState([]);
   const [legenda, setLegenda] = useState("");
   const [imagem, setImagem] = useState(null);
   const [mensagem, setMensagem] = useState("");
+  const [AniVerMEs, setAniVerMEs] = useState([]);
 
   useEffect(() => {
-    buscarComunicados();
+    comuni();
+    Aniver();
   }, []);
 
-  const buscarComunicados = async () => {
+
+  const comuni = async () => {
     try {
       const response = await fetch("http://localhost:8080/comunicados");
       const data = await response.json();
@@ -21,6 +25,23 @@ export default function Home() {
     }
   };
 
+  const Aniver = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/assistidos");
+
+      const data = await response.json();
+      const mesAtual = new Date().getMonth() + 1;
+      const filtrados = data.filter((a) => {
+        if (!a.data_nascimento) return false;
+        const data = new Date(a.data_nascimento);
+        return data.getMonth() + 1 === mesAtual;
+      });
+      setAniVerMEs(filtrados);
+    } catch (error) {
+      console.error("Erro ao buscar comunicados", error);
+    }
+  };
+  
   const handleAdicionar = async (e) => {
     e.preventDefault();
 
@@ -40,7 +61,7 @@ export default function Home() {
         setMensagem("Comunicado adicionado com sucesso!");
         setLegenda("");
         setImagem(null);
-        buscarComunicados();
+        comuni();
       } else {
         setMensagem("Erro ao adicionar comunicado");
       }
@@ -69,7 +90,7 @@ export default function Home() {
 
         if (response.ok) {
           setMensagem("Legenda atualizada com sucesso!");
-          buscarComunicados();
+          comuni();
         } else {
           setMensagem("Erro ao atualizar legenda");
         }
@@ -91,7 +112,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        buscarComunicados();
+        comuni();
         setMensagem("Comunicado deletado com sucesso!");
       }
     } catch (error) {
@@ -139,17 +160,18 @@ export default function Home() {
       <Row className="mt-4">
         {comunicados.length > 0 ? (
           comunicados.map((item) => (
-            <Col md={4} key={item.id} className="mb-3">
-              <div className="comunicado p-2 border rounded">
+            <Col md={6} key={item.id} className="mb-3">
+              <div className="comunicado p-4">
                 {item.imagem && (
                   <img
                     src={`http://localhost:8080/uploads/${item.imagem}`}
                     alt="Comunicado"
                     style={{
-                      width: "100%",
-                      height: "200px",
+                      width: "90%",
+                      height: "280px",
                       objectFit: "cover",
                       marginBottom: "10px",
+                      marginLeft: "-3%",
                     }}
                   />
                 )}
@@ -157,16 +179,16 @@ export default function Home() {
                   <strong>Legenda:</strong> {item.legenda}
                 </p>
 
-                <div className="d-flex justify-content-between">
+                <div className="d-flex justify-content-center gap-2 mt-2">
                   <Button
-                    variant="danger"
+                    variant="secondary"
                     size="sm"
                     onClick={() => handleExcluir(item.id)}
                   >
                     Deletar
                   </Button>
                   <Button
-                    variant="warning"
+                    variant="success"
                     size="sm"
                     onClick={() => handleEditarLegenda(item)}
                   >
@@ -177,7 +199,69 @@ export default function Home() {
             </Col>
           ))
         ) : (
-          <p className="text-muted">Nenhum comunicado ainda.</p>
+          <Alert
+            variant="success"
+            style={{
+              maxWidth: "400px",
+              margin: "20px auto",
+              textAlign: "center",
+            }}
+          >
+            Nenhum comunicado ainda.
+          </Alert>
+        )}
+      </Row>
+
+      <h2 className="mt-5">Aniversariantes do Mês</h2>
+
+      <Row className="mt-3">
+        {AniVerMEs.length > 0 ? (
+          AniVerMEs.map((item) => (
+            <Col key={item.id} md={3} sm={6} xs={12} className="mb-4">
+              <div
+                className="text-center p-3 shadow-sm rounded"
+                style={{
+                  border: "1px solid #ccc",
+                  height: "250px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#f9f9f9",
+                }}
+              >
+                {item.foto ? (
+                  <img
+                    src={`http://localhost:8080/uploads/${item.foto}`}
+                    alt="Foto do assistido"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <FaUserCircle size={80} color="#ccc" />
+                )}
+                <h5 className="mt-3">{item.nome}</h5>
+                <small>
+                  {new Date(item.data_nascimento).toLocaleDateString()}
+                </small>
+              </div>
+            </Col>
+          ))
+        ) : (
+          <Alert
+            variant="success"
+            style={{
+              maxWidth: "400px",
+              margin: "20px auto",
+              textAlign: "center",
+            }}
+          >
+            Nenhum aniversariante encontrado este mês.
+          </Alert>
         )}
       </Row>
     </Container>

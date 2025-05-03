@@ -20,3 +20,8 @@ export const formatarTelefone = (valor) => {
 export const FormataRG = (valor) => {
   return valor.replace(/\D/g, "").slice(0, 9);
 }
+
+export const formatarCEP = (cep) => {
+  const Enumero = cep.replace(/\D/g, "").slice(0, 8);
+  return Enumero.replace(/(\d{5})(\d)/, "$1-$2")
+};

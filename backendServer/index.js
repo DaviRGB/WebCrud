@@ -3,11 +3,13 @@ import cors from "cors";
 import { createTables } from "./config/database.js";
 import routeAssistido from "./route/RouteAssistido.js";
 import comunicadosRoutes from './route/HomeRouteController.js';
+import apiController from "./controller/apiCEPController.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(apiController);
 app.use('/comunicados', comunicadosRoutes);
 app.use('/uploads', express.static('uploads'));
 

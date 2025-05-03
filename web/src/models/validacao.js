@@ -71,3 +71,8 @@ export  function validarData(dataStr) {
   }
   return true;
 }
+
+export const validarCep = (cep) => {
+  const soNumeros = cep.replace(/\D/g, '');
+  return soNumeros.length === 8;
+};
